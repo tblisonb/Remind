@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Remind"
-include(":app", ":shared", ":server")
+include(":app", ":shared", ":server", ":desktop")

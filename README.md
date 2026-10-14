@@ -8,6 +8,7 @@ with a web UI for the desktop.
 | `app/` | Android app: Kotlin + Jetpack Compose, Room, `AlarmManager` for exact reminders |
 | `shared/` | Plain Kotlin used by both: recurrence math, repeat labels, sync data types |
 | `server/` | Ktor server: SQLite, sync API, server-rendered web UI |
+| `desktop/` | Desktop reminders: a small background service showing native Plasma notifications |
 | `deploy/` | Hardened systemd unit and install script |
 
 ## Toolchain (no Android Studio needed)
@@ -93,6 +94,45 @@ existing task.
 - The token is stored in app-private storage and excluded from Android backups.
 - **LineageOS:** if *restricted networking mode* is on, new apps get no network at all and sync fails
   with "connection refused". Allow it under **App info → Remind → Mobile data usage → Network access**.
+
+## Desktop reminders (KDE Plasma)
+
+`remind-desktop` runs as a systemd user service with your Plasma session. It keeps a local copy of
+your tasks (synced every minute) and shows reminders as native notifications with **Done** and
+**Snooze 1h**; clicking the notification opens the task in the web UI. Reminders fire from the local
+copy, so they work while the server or network is down (e.g. a laptop away from home).
+
+Install or update (no sudo; needs a Java 17+ runtime):
+
+```sh
+./gradlew :desktop:installDist && desktop/build/install/remind-desktop/install.sh
+```
+
+First-time setup (asks for the server URL and access token, checks the connection, then starts it):
+
+```sh
+remind-desktop setup
+systemctl --user start remind-desktop
+```
+
+As one paste:
+
+```sh
+remind-desktop setup && systemctl --user start remind-desktop
+```
+
+Other commands: `remind-desktop status` (upcoming reminders), `remind-desktop open` (web UI),
+`remind-desktop test-notification` (checks notifications and buttons), and
+`journalctl --user -u remind-desktop -f` for logs.
+
+- Reminder notifications stay on screen until you click **Done**/**Snooze** or dismiss them: once a
+  Plasma popup times out, its buttons stop working, which would defeat the point.
+- **Done** completes a one-time task everywhere; on a recurring task it just dismisses this
+  occurrence. Snooze is per device. You'll get each reminder on the phone and each desktop.
+- Config lives in `~/.config/remind/` (token file is owner-only), the task cache in
+  `~/.local/state/remind/`. The service is sandboxed: read-only home except that cache directory.
+- Other Plasma machines: copy `desktop/build/distributions/remind-desktop.tar` over (or clone and
+  build), unpack it and run its `install.sh`. Building needs this repo's toolchain, the tarball doesn't.
 
 ## Release builds
 

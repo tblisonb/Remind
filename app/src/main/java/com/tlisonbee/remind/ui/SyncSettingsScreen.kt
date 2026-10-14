@@ -39,8 +39,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.tlisonbee.remind.sync.SyncConfig
+import com.tlisonbee.remind.shared.normalizeServerUrl
 import com.tlisonbee.remind.sync.SyncStatus
-import java.net.URI
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -163,21 +163,3 @@ private fun SyncStatusLine(status: SyncStatus) {
     }
 }
 
-/**
- * Returns the URL without a trailing slash, or null if it isn't usable. HTTPS is required;
- * plain HTTP is accepted only for localhost (a dev server forwarded over USB with `adb reverse`).
- */
-fun normalizeServerUrl(input: String): String? {
-    val uri = try {
-        URI(input.trim().trimEnd('/'))
-    } catch (_: Exception) {
-        return null
-    }
-    val host = uri.host ?: return null
-    val ok = when (uri.scheme) {
-        "https" -> true
-        "http" -> host == "localhost" || host == "127.0.0.1"
-        else -> false
-    }
-    return if (ok && uri.query == null && uri.fragment == null) uri.toString() else null
-}

@@ -1,5 +1,6 @@
 package com.tlisonbee.remind.server
 
+import com.tlisonbee.remind.shared.SyncJson
 import com.tlisonbee.remind.shared.SyncRequest
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
@@ -31,7 +32,6 @@ import io.ktor.server.sessions.cookie
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import java.security.MessageDigest
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.minutes
@@ -45,7 +45,7 @@ val LOGIN_RATE_LIMIT = RateLimitName("login")
 
 fun Application.remindModule(config: Config, store: TaskStore) {
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(SyncJson)
     }
     install(CallLogging)
     install(StatusPages) {

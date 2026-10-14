@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.tlisonbee.remind.app
+import com.tlisonbee.remind.sync.SyncScheduler
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -23,6 +24,12 @@ class MainActivity : ComponentActivity() {
                 RemindRoot(viewModel)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Pick up edits made elsewhere (e.g. the web UI) whenever the app comes to the foreground.
+        if (app.syncManager.serverUrl != null) SyncScheduler.requestSoon(this)
     }
 
     override fun onStop() {

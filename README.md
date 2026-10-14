@@ -77,6 +77,23 @@ server/src/main/kotlin/…    Main (config), Application (plugins, auth, API), W
 - Alarms are re-armed on boot, app update, time/time zone change and app launch.
 - Marking a task done in the list stops its reminders (including recurring ones).
 
+## Sync
+
+In the app: **⚙ (top right) → Sync**, enter the server URL (e.g. `https://<pc>.<tailnet>.ts.net`) and
+the access token (`sudo cat /etc/remind/token`), then **Connect**. The first sync uploads every
+existing task.
+
+- The app syncs on launch, a few seconds after any edit, every 15 minutes in the background
+  (when online), and on pull-to-refresh in the task list.
+- Each task carries `updatedAt`; when the same task was changed in two places, the newer edit wins.
+- Reminder alarms stay on the phone: synced changes just re-arm them, so reminders fire with or
+  without the server.
+- HTTPS is required. Debug builds additionally allow `http://localhost:8765`, for testing against a
+  dev server on the PC over USB: `adb reverse tcp:8765 tcp:8765`.
+- The token is stored in app-private storage and excluded from Android backups.
+- **LineageOS:** if *restricted networking mode* is on, new apps get no network at all and sync fails
+  with "connection refused". Allow it under **App info → Remind → Mobile data usage → Network access**.
+
 ## Release builds
 
 Debug builds are signed with an auto-generated debug key, which is fine for a personal install.
@@ -124,6 +141,12 @@ sudo cat /etc/remind/token        # the access token for the web login and the a
 journalctl -u remind -f           # logs
 ```
 
+First install as one paste (Java runtime, build, install, show the token):
+
+```sh
+sudo apt install -y openjdk-21-jre-headless && ./gradlew :server:installDist && sudo deploy/install.sh && sudo cat /etc/remind/token
+```
+
 This puts the program in `/opt/remind` (root-owned), the database in `/var/lib/remind`, and the token
 in `/etc/remind/token` (root-only, generated on first install). The service runs as an unprivileged
 throwaway user (`DynamicUser`) with no access to home directories, a read-only filesystem except its
@@ -139,10 +162,17 @@ router or firewalld port needs opening. Tailscale makes it reachable from your o
 
 1. Install Tailscale on the PC (Debian 13):
    ```sh
-   curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg | sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
-   curl -fsSL https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+   cd "$(mktemp -d)"
+   curl -fsSLO https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg
+   curl -fsSLO https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list
+   sudo install -m 644 trixie.noarmor.gpg /usr/share/keyrings/tailscale-archive-keyring.gpg
+   sudo install -m 644 trixie.tailscale-keyring.list /etc/apt/sources.list.d/tailscale.list
    sudo apt update && sudo apt install tailscale
    sudo tailscale up
+   ```
+   As one paste:
+   ```sh
+   cd "$(mktemp -d)" && curl -fsSLO https://pkgs.tailscale.com/stable/debian/trixie.noarmor.gpg && curl -fsSLO https://pkgs.tailscale.com/stable/debian/trixie.tailscale-keyring.list && sudo install -m 644 trixie.noarmor.gpg /usr/share/keyrings/tailscale-archive-keyring.gpg && sudo install -m 644 trixie.tailscale-keyring.list /etc/apt/sources.list.d/tailscale.list && sudo apt update && sudo apt install -y tailscale && sudo tailscale up
    ```
 2. Install Tailscale on the phone (F-Droid or Play Store) and sign in to the same account.
 3. In the Tailscale admin console under **DNS**, enable MagicDNS and HTTPS certificates.

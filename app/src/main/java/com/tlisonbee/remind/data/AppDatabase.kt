@@ -1,6 +1,7 @@
 package com.tlisonbee.remind.data
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -16,7 +17,11 @@ class Converters {
     fun toLocalDateTime(value: String?): LocalDateTime? = value?.let(LocalDateTime::parse)
 }
 
-@Database(entities = [Task::class], version = 1)
+@Database(
+    entities = [Task::class],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)], // v2: Task.dirty
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun taskDao(): TaskDao

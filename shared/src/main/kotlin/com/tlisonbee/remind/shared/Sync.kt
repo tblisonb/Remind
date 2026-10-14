@@ -1,6 +1,7 @@
 package com.tlisonbee.remind.shared
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
  * A task as it travels between devices and the server. Device-local scheduling state (when the
@@ -38,6 +39,9 @@ data class SyncResponse(
     val cursor: Long,
     val changes: List<TaskDto>,
 )
+
+/** JSON settings for the sync API, used by both ends. Unknown fields are ignored so either side can add some. */
+val SyncJson = Json { ignoreUnknownKeys = true }
 
 object Limits {
     const val MAX_TITLE = 1_000

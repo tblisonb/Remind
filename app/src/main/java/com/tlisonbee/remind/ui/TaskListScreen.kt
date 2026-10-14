@@ -17,16 +17,19 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -43,6 +46,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.tlisonbee.remind.data.Task
+import com.tlisonbee.remind.sync.SyncStatus
 import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +54,10 @@ import java.time.LocalDateTime
 fun TaskListScreen(
     tasks: List<Task>,
     notificationsAllowed: Boolean,
+    syncStatus: SyncStatus,
     onOpenNotificationSettings: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onRefresh: () -> Unit,
     onAdd: () -> Unit,
     onOpen: (String) -> Unit,
     onSetDone: (String, Boolean) -> Unit,
@@ -63,44 +70,65 @@ fun TaskListScreen(
     var showCompleted by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Remind") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Remind") },
+                actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Sync settings")
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAdd) {
                 Icon(Icons.Default.Add, contentDescription = "Add task")
             }
         },
     ) { padding ->
-        LazyColumn(
+        // Pull to refresh only makes sense once a server is set up.
+        PullToRefreshBox(
+            isRefreshing = syncStatus.inProgress,
+            onRefresh = { if (syncStatus.configured) onRefresh() },
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (!notificationsAllowed) {
-                item { NotificationsOffBanner(onOpenNotificationSettings) }
-            }
-            if (tasks.isEmpty()) {
-                item {
-                    Box(Modifier.fillMaxWidth().padding(top = 96.dp), contentAlignment = Alignment.Center) {
-                        Text("No tasks yet. Tap + to add one.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 96.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (!notificationsAllowed) {
+                    item {
+                        Banner("Notifications are off, so reminders won't appear.", "Settings", onOpenNotificationSettings)
                     }
                 }
-            }
-            items(active, key = { it.id }) { task ->
-                TaskRow(task, onOpen, onSetDone, Modifier.animateItem())
-            }
-            if (completed.isNotEmpty()) {
-                item(key = "completed-header") {
-                    TextButton(onClick = { showCompleted = !showCompleted }, modifier = Modifier.animateItem()) {
-                        Icon(
-                            if (showCompleted) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
-                        )
-                        Text("Completed (${completed.size})")
+                if (syncStatus.configured && syncStatus.lastError != null && !syncStatus.inProgress) {
+                    item { Banner("Sync failed: ${syncStatus.lastError}", "Details", onOpenSettings) }
+                }
+                if (tasks.isEmpty()) {
+                    item {
+                        Box(Modifier.fillMaxWidth().padding(top = 96.dp), contentAlignment = Alignment.Center) {
+                            Text("No tasks yet. Tap + to add one.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
-                if (showCompleted) {
-                    items(completed, key = { it.id }) { task ->
-                        TaskRow(task, onOpen, onSetDone, Modifier.animateItem())
+                items(active, key = { it.id }) { task ->
+                    TaskRow(task, onOpen, onSetDone, Modifier.animateItem())
+                }
+                if (completed.isNotEmpty()) {
+                    item(key = "completed-header") {
+                        TextButton(onClick = { showCompleted = !showCompleted }, modifier = Modifier.animateItem()) {
+                            Icon(
+                                if (showCompleted) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                            )
+                            Text("Completed (${completed.size})")
+                        }
+                    }
+                    if (showCompleted) {
+                        items(completed, key = { it.id }) { task ->
+                            TaskRow(task, onOpen, onSetDone, Modifier.animateItem())
+                        }
                     }
                 }
             }
@@ -163,18 +191,18 @@ private fun TaskRow(
 }
 
 @Composable
-private fun NotificationsOffBanner(onOpenSettings: () -> Unit) {
+private fun Banner(message: String, action: String, onAction: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Row(Modifier.padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "Notifications are off, so reminders won't appear.",
+                message,
                 modifier = Modifier.weight(1f).padding(vertical = 12.dp),
                 color = MaterialTheme.colorScheme.onErrorContainer,
             )
-            TextButton(onClick = onOpenSettings) { Text("Settings") }
+            TextButton(onClick = onAction) { Text(action) }
         }
     }
 }

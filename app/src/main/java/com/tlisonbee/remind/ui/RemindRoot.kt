@@ -22,14 +22,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 @Composable
 fun RemindRoot(viewModel: TasksViewModel) {
     val tasks by viewModel.tasks.collectAsStateWithLifecycle()
+    val syncStatus by viewModel.syncStatus.collectAsStateWithLifecycle()
     val notificationsAllowed = rememberNotificationPermission()
     val context = LocalContext.current
 
-    when (val draft = viewModel.draft) {
-        null -> TaskListScreen(
+    val draft = viewModel.draft
+    when {
+        viewModel.settingsOpen -> SyncSettingsScreen(
+            status = syncStatus,
+            savedServerUrl = viewModel.serverUrl,
+            onConnect = { config -> viewModel.connect(config, onConnected = viewModel::closeSettings) },
+            onSyncNow = viewModel::syncNow,
+            onDisconnect = viewModel::disconnect,
+            onBack = viewModel::closeSettings,
+        )
+        draft == null -> TaskListScreen(
             tasks = tasks,
             notificationsAllowed = notificationsAllowed,
+            syncStatus = syncStatus,
             onOpenNotificationSettings = { context.openNotificationSettings() },
+            onOpenSettings = viewModel::openSettings,
+            onRefresh = viewModel::syncNow,
             onAdd = viewModel::newTask,
             onOpen = viewModel::openEditor,
             onSetDone = viewModel::setDone,

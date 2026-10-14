@@ -1,5 +1,6 @@
 package com.tlisonbee.remind.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.tlisonbee.remind.shared.RepeatUnit
@@ -28,6 +29,8 @@ data class Task(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val deleted: Boolean = false,
+    /** Edited locally since the last successful sync. New in schema v2; existing rows start dirty. */
+    @ColumnInfo(defaultValue = "1") val dirty: Boolean = true,
 ) {
     val isRecurring: Boolean get() = remindAt != null && repeatUnit != RepeatUnit.NONE
 }

@@ -10,7 +10,10 @@ DEST="$DATA/remind-desktop"
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/remind"
 
-command -v java >/dev/null || { echo "A Java 17+ runtime is required: sudo apt install openjdk-21-jre-headless" >&2; exit 1; }
+if [[ ! -x "$SRC/runtime/bin/java" ]] && ! command -v java >/dev/null; then
+    echo "This build has no bundled Java runtime; install Java 17+ (e.g. openjdk-21-jre-headless / jre21-openjdk)." >&2
+    exit 1
+fi
 
 # Program files
 if [[ "$SRC" != "$DEST" ]]; then
@@ -63,9 +66,20 @@ UNIT
 
 systemctl --user daemon-reload
 systemctl --user enable remind-desktop.service >/dev/null
-if "$DEST/bin/remind-desktop" status >/dev/null 2>&1; then
+CLI="$DEST/bin/remind-desktop"
+if "$CLI" status >/dev/null 2>&1; then
     systemctl --user restart remind-desktop.service
-    echo "Installed and (re)started. Logs: journalctl --user -u remind-desktop -f"
+    echo "Updated and restarted. Logs: journalctl --user -u remind-desktop -f"
+elif [[ -t 0 ]]; then
+    # First install from a terminal: connect to the server right away.
+    echo "Installed. Now connecting it to your Remind server:"
+    "$CLI" setup
+    systemctl --user start remind-desktop.service
+    echo "Running. Try: $CLI test-notification"
 else
-    echo "Installed. Next: remind-desktop setup && systemctl --user start remind-desktop"
+    echo "Installed. Next: $CLI setup && systemctl --user start remind-desktop"
 fi
+case ":$PATH:" in
+    *":$HOME/.local/bin:"*) ;;
+    *) echo "Note: ~/.local/bin isn't on your PATH, so use the full path: $CLI" ;;
+esac

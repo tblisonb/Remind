@@ -102,7 +102,7 @@ your tasks (synced every minute) and shows reminders as native notifications wit
 **Snooze 1h**; clicking the notification opens the task in the web UI. Reminders fire from the local
 copy, so they work while the server or network is down (e.g. a laptop away from home).
 
-Install or update (no sudo; needs a Java 17+ runtime):
+Install or update from source on this machine (no sudo; uses the system Java 17+ runtime):
 
 ```sh
 ./gradlew :desktop:installDist && desktop/build/install/remind-desktop/install.sh
@@ -131,8 +131,34 @@ Other commands: `remind-desktop status` (upcoming reminders), `remind-desktop op
   occurrence. Snooze is per device. You'll get each reminder on the phone and each desktop.
 - Config lives in `~/.config/remind/` (token file is owner-only), the task cache in
   `~/.local/state/remind/`. The service is sandboxed: read-only home except that cache directory.
-- Other Plasma machines: copy `desktop/build/distributions/remind-desktop.tar` over (or clone and
-  build), unpack it and run its `install.sh`. Building needs this repo's toolchain, the tarball doesn't.
+- The background process uses roughly 70–90 MB of memory.
+
+### Other Plasma machines (self-contained package)
+
+`./gradlew :desktop:bundledDist` builds
+`desktop/build/distributions/remind-desktop-<version>-linux-x86_64.tar.gz` (~30 MB), which bundles
+a trimmed Java runtime, so the target machine needs nothing installed beyond Plasma and systemd
+(any distro, e.g. Arch). Publish it as a GitHub release with `deploy/release-desktop.sh` (bump
+`version` in `desktop/build.gradle.kts` first).
+
+On another machine, with `gh` logged in, install or update with:
+
+```sh
+gh release download desktop-v0.1.0 --repo tblisonb/Remind --pattern '*.tar.gz*'
+sha256sum -c remind-desktop-0.1.0-linux-x86_64.tar.gz.sha256
+tar xzf remind-desktop-0.1.0-linux-x86_64.tar.gz
+remind-desktop-0.1.0-linux-x86_64/install.sh
+```
+
+As one paste:
+
+```sh
+gh release download desktop-v0.1.0 --repo tblisonb/Remind --pattern '*.tar.gz*' && sha256sum -c remind-desktop-0.1.0-linux-x86_64.tar.gz.sha256 && tar xzf remind-desktop-0.1.0-linux-x86_64.tar.gz && remind-desktop-0.1.0-linux-x86_64/install.sh
+```
+
+On a first install, `install.sh` asks for the server URL and token and starts the service; on later
+runs it updates in place and restarts it. (Or copy the tarball over with `scp` instead of `gh`.)
+The machine needs to be on your tailnet to reach the server.
 
 ## Release builds
 

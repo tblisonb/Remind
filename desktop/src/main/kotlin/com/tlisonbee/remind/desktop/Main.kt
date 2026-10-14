@@ -69,7 +69,7 @@ private fun setup() {
     if (token.isEmpty()) exitProcess(1)
 
     val config = DesktopConfig(url, token)
-    print("Checking the connection… ")
+    print("Checking the connection... ")
     try {
         SyncClient(config).sync(SyncRequest(since = 0, changes = emptyList()))
     } catch (e: Exception) {
@@ -178,7 +178,7 @@ private fun testNotification() {
                 updatedAt = now,
             ),
         )
-        println("Notification $id shown; waiting up to 60 s for a click…")
+        println("Notification $id shown; waiting up to 60 s for a click...")
         if (!clicked.await(60, TimeUnit.SECONDS)) println("No click received.")
     }
 }

@@ -13,6 +13,8 @@ import java.io.IOException
 
 enum class SyncResult { SUCCESS, NOT_CONFIGURED, NETWORK_ERROR, FAILED }
 
+data class SyncProblem(val lastOkAt: Long, val error: String?)
+
 /**
  * One sync round: push dirty tasks, merge what the server sends back, advance the cursor.
  * Safe to retry at any point: the server ignores versions it already has.
@@ -22,6 +24,8 @@ class SyncManager(
     private val settings: SyncSettings,
     /** Starts/stops background syncing (kept out of here so this class has no Android dependencies). */
     private val onConnectionChanged: (connected: Boolean) -> Unit = {},
+    /** Shows (with the last good sync time and error) or clears the "hasn't synced" notification. */
+    private val onSyncProblem: (problem: SyncProblem?) -> Unit = {},
     private val client: SyncClient = SyncClient(),
 ) {
     private val mutex = Mutex()
@@ -38,10 +42,33 @@ class SyncManager(
     fun disconnect() {
         settings.clear()
         onConnectionChanged(false)
+        onSyncProblem(null)
     }
 
     suspend fun sync(): SyncResult = mutex.withLock {
         val config = settings.config ?: return SyncResult.NOT_CONFIGURED
+        val result = syncLocked(config)
+        val action = SyncHealth.afterSync(
+            success = result == SyncResult.SUCCESS,
+            lastOkAt = settings.lastOkAt,
+            now = System.currentTimeMillis(),
+            alreadyShown = settings.staleNotified,
+        )
+        when (action) {
+            SyncHealth.Action.SHOW -> {
+                onSyncProblem(SyncProblem(settings.lastOkAt!!, settings.status.value.lastError))
+                settings.staleNotified = true
+            }
+            SyncHealth.Action.CANCEL -> {
+                onSyncProblem(null)
+                settings.staleNotified = false
+            }
+            SyncHealth.Action.NONE -> {}
+        }
+        result
+    }
+
+    private suspend fun syncLocked(config: SyncConfig): SyncResult {
         settings.setInProgress(true)
         try {
             val pending = repository.pendingChanges()
@@ -54,16 +81,16 @@ class SyncManager(
                 settings.cursor = response.cursor
             }
             settings.recordSuccess(System.currentTimeMillis())
-            SyncResult.SUCCESS
+            return SyncResult.SUCCESS
         } catch (e: SyncException) {
             settings.recordError(e.message.orEmpty())
-            SyncResult.FAILED
+            return SyncResult.FAILED
         } catch (e: IOException) {
             settings.recordError("Couldn't reach the server (${e.javaClass.simpleName}: ${e.message})")
-            SyncResult.NETWORK_ERROR
+            return SyncResult.NETWORK_ERROR
         } catch (e: SerializationException) {
             settings.recordError("Unexpected response from the server.")
-            SyncResult.FAILED
+            return SyncResult.FAILED
         } finally {
             settings.setInProgress(false)
         }

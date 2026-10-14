@@ -28,14 +28,21 @@ class RemindApp : Application() {
     }
 
     val syncManager by lazy {
-        SyncManager(repository, syncSettings, onConnectionChanged = { connected ->
-            if (connected) SyncScheduler.schedulePeriodic(this) else SyncScheduler.cancelAll(this)
-        })
+        SyncManager(
+            repository,
+            syncSettings,
+            onConnectionChanged = { connected ->
+                if (connected) SyncScheduler.schedulePeriodic(this) else SyncScheduler.cancelAll(this)
+            },
+            onSyncProblem = { problem ->
+                if (problem != null) notifier.showSyncProblem(problem) else notifier.cancelSyncProblem()
+            },
+        )
     }
 
     override fun onCreate() {
         super.onCreate()
-        notifier.createChannel()
+        notifier.createChannels()
         if (syncSettings.config != null) SyncScheduler.schedulePeriodic(this)
     }
 }

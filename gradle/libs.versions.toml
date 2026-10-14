@@ -8,6 +8,7 @@ coreKtx = "1.19.1"
 lifecycle = "2.11.0"
 room = "2.8.5"
 work = "2.12.0"
+junit = "4.13.2"
 ktor = "3.6.0"
 kotlinxSerialization = "1.11.0"
 sqliteJdbc = "3.53.4.0"
@@ -31,6 +32,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }

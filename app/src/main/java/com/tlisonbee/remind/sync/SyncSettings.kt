@@ -44,6 +44,16 @@ class SyncSettings(context: Context) {
         get() = prefs.getLong(KEY_CURSOR, 0)
         set(value) = prefs.edit { putLong(KEY_CURSOR, value) }
 
+    /** Last successful sync, or when sync was set up if it hasn't succeeded yet. */
+    val lastOkAt: Long?
+        get() = prefs.getLong(KEY_LAST_SUCCESS, 0).takeIf { it > 0 }
+            ?: prefs.getLong(KEY_CONFIGURED_AT, 0).takeIf { it > 0 }
+
+    /** Whether the "hasn't synced" notification is up (or was dismissed) for the current failures. */
+    var staleNotified: Boolean
+        get() = prefs.getBoolean(KEY_STALE_NOTIFIED, false)
+        set(value) = prefs.edit { putBoolean(KEY_STALE_NOTIFIED, value) }
+
     /** Returns true if this is a different server than before (so the cursor was reset). */
     fun save(config: SyncConfig): Boolean {
         val serverChanged = this.config?.serverUrl != config.serverUrl
@@ -53,6 +63,7 @@ class SyncSettings(context: Context) {
             if (serverChanged) {
                 putLong(KEY_CURSOR, 0)
                 remove(KEY_LAST_SUCCESS)
+                putLong(KEY_CONFIGURED_AT, System.currentTimeMillis())
             }
             remove(KEY_LAST_ERROR)
         }
@@ -87,5 +98,7 @@ class SyncSettings(context: Context) {
         private const val KEY_CURSOR = "cursor"
         private const val KEY_LAST_SUCCESS = "lastSuccessAt"
         private const val KEY_LAST_ERROR = "lastError"
+        private const val KEY_CONFIGURED_AT = "configuredAt"
+        private const val KEY_STALE_NOTIFIED = "staleNotified"
     }
 }

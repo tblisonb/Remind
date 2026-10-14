@@ -44,9 +44,11 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent) {
         intent.getStringExtra(EXTRA_TASK_ID)?.let(viewModel::openEditor)
+        if (intent.getBooleanExtra(EXTRA_OPEN_SYNC_SETTINGS, false)) viewModel.openSettings()
     }
 
     companion object {
         const val EXTRA_TASK_ID = "taskId"
+        const val EXTRA_OPEN_SYNC_SETTINGS = "openSyncSettings"
     }
 }

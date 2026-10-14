@@ -92,6 +92,9 @@ existing task.
 - HTTPS is required. Debug builds additionally allow `http://localhost:8765`, for testing against a
   dev server on the PC over USB: `adb reverse tcp:8765 tcp:8765`.
 - The token is stored in app-private storage and excluded from Android backups.
+- If syncing keeps failing for 12 hours (e.g. Tailscale stopped), the app posts one quiet notification
+  ("Not synced since …", on its own low-importance channel); it clears itself after the next
+  successful sync. Reminders keep working either way.
 - **LineageOS:** if *restricted networking mode* is on, new apps get no network at all and sync fails
   with "connection refused". Allow it under **App info → Remind → Mobile data usage → Network access**.
 

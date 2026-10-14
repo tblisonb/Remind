@@ -1,0 +1,53 @@
+[versions]
+agp = "9.4.1"
+kotlin = "2.4.21"
+ksp = "2.3.12"
+composeBom = "2026.09.00"
+activityCompose = "1.13.0"
+coreKtx = "1.19.1"
+lifecycle = "2.11.0"
+room = "2.8.5"
+ktor = "3.6.0"
+kotlinxSerialization = "1.11.0"
+sqliteJdbc = "3.53.4.0"
+logback = "1.6.5"
+
+[libraries]
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { module = "androidx.compose.ui:ui" }
+androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-material-icons-core = { module = "androidx.compose.material:material-icons-core" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
+ktor-server-core = { module = "io.ktor:ktor-server-core" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
+ktor-server-auth = { module = "io.ktor:ktor-server-auth" }
+ktor-server-sessions = { module = "io.ktor:ktor-server-sessions" }
+ktor-server-html-builder = { module = "io.ktor:ktor-server-html-builder" }
+ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages" }
+ktor-server-rate-limit = { module = "io.ktor:ktor-server-rate-limit" }
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

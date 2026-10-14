@@ -1,0 +1,4 @@
+<resources>
+    <!-- Only affects the window before Compose draws; the real theme is RemindTheme. -->
+    <style name="Theme.Remind" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

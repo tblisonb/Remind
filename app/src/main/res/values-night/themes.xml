@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.Remind" parent="android:Theme.Material.NoActionBar" />
+</resources>

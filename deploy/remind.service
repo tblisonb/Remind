@@ -1,0 +1,50 @@
+[Unit]
+Description=Remind task server
+After=network.target
+
+[Service]
+ExecStart=/opt/remind/bin/remind-server
+Environment=REMIND_DB=/var/lib/remind/remind.db
+Environment=REMIND_HOST=127.0.0.1
+Environment=REMIND_PORT=8765
+# The token is handed over by systemd, readable only by this service (%d = credentials directory).
+LoadCredential=token:/etc/remind/token
+Environment=REMIND_TOKEN_FILE=%d/token
+Restart=on-failure
+
+# Runs as a throwaway user with no access to anyone's files; only /var/lib/remind is writable.
+DynamicUser=yes
+StateDirectory=remind
+StateDirectoryMode=0700
+UMask=0077
+
+# Network: loopback only. Even a bug can't make it talk to (or listen on) anything else;
+# `tailscale serve` reaches it over loopback.
+IPAddressDeny=any
+IPAddressAllow=localhost
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Sandboxing
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+# MemoryDenyWriteExecute is left off: the JVM's JIT compiler needs writable+executable memory.
+
+[Install]
+WantedBy=multi-user.target
